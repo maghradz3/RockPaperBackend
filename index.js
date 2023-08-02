@@ -25,30 +25,47 @@ class KeyGenerator {
 class TableGenerator {
   constructor(moves) {
     this.rules = new Rules(moves);
+    console.log("rules", this.rules);
   }
+
   generateTable() {
-    const moves = ["Rock", "Paper", "Scissors"];
-    const results = [
-      ["Draw", "Win", "Lose"],
-      ["Lose", "Draw", "Win"],
-      ["Win", "Lose", "Draw"],
-    ];
+    let table =
+      "+-------------+" + "-------+".repeat(this.rules.moves.length) + "\n";
+    table += "| v PC\\User > |";
+    this.rules.moves.forEach((move) => (table += " " + move + " |"));
+    table +=
+      "\n" +
+      "+-------------+" +
+      "-------+".repeat(this.rules.moves.length) +
+      "\n";
 
-    let table = "+-------------+------+-------+----------+\n";
-    table += "| v PC\\User > | Rock | Paper | Scissors |\n";
-    table += "+-------------+------+-------+----------+\n";
-
-    for (let i = 0; i < moves.length; i++) {
-      table += "| " + moves[i] + " ".repeat(11 - moves[i].length);
-      for (let j = 0; j < results[i].length; j++) {
-        table += "| " + results[i][j] + " ".repeat(6 - results[i][j].length);
+    for (let i = 0; i < this.rules.moves.length; i++) {
+      table +=
+        "| " +
+        this.rules.moves[i] +
+        " ".repeat(11 - this.rules.moves[i].length) +
+        "|";
+      for (let j = 0; j < this.rules.moves.length; j++) {
+        let result = this.rules.compareMoves(
+          this.rules.moves,
+          this.rules.moves[i],
+          this.rules.moves[j]
+        );
+        table += " " + result + " ".repeat(6 - result.length) + "|";
       }
-      table += "|\n+-------------+------+-------+----------+\n";
+      table +=
+        "\n" +
+        "+-------------+" +
+        "-------+".repeat(this.rules.moves.length) +
+        "\n";
     }
 
     return table;
   }
 }
+
+const classicTableGenerator = new TableGenerator("classic");
+const extendedTableGenerator = new TableGenerator("extended");
 
 const moves = process.argv.slice(2);
 if (moves.length < 2) {
