@@ -25,7 +25,6 @@ class KeyGenerator {
 class TableGenerator {
   constructor(moves) {
     this.rules = new Rules(moves);
-    console.log("rules", this.rules);
   }
 
   generateTable() {
@@ -45,14 +44,15 @@ class TableGenerator {
         this.rules.moves[i] +
         " ".repeat(11 - this.rules.moves[i].length) +
         "|";
+
       for (let j = 0; j < this.rules.moves.length; j++) {
         let result = this.rules.compareMoves(
-          this.rules.moves,
           this.rules.moves[i],
           this.rules.moves[j]
         );
         table += " " + result + " ".repeat(6 - result.length) + "|";
       }
+
       table +=
         "\n" +
         "+-------------+" +
@@ -63,9 +63,6 @@ class TableGenerator {
     return table;
   }
 }
-
-const classicTableGenerator = new TableGenerator("classic");
-const extendedTableGenerator = new TableGenerator("extended");
 
 const moves = process.argv.slice(2);
 if (moves.length < 2) {
