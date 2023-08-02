@@ -1,52 +1,75 @@
 const crypto = require("crypto");
 
-function compareMoves(moves, move1, move2) {
-  const index1 = moves.indexOf(move1);
-  const index2 = moves.indexOf(move2);
-  if (index1 === index2) return "Draw";
-  const distance = (index2 - index1 + moves.length) % moves.length;
-  return distance <= moves.length / 2 ? "Win" : "Lose";
-}
-
-function generateKey() {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-function generateHMAC(key, message) {
-  return crypto.createHmac("sha256", key).update(message).digest("hex");
-}
-
-function generateTable(moves) {
-  let table = "";
-  for (let i = -1; i < moves.length; i++) {
-    for (let j = -1; j < moves.length; j++) {
-      if (i === -1 && j === -1) {
-        table += "Move";
-      } else if (i === -1) {
-        table += moves[j];
-      } else if (j === -1) {
-        table += moves[i];
-      } else {
-        table += compareMoves(moves, moves[i], moves[j]);
-      }
-      table += "\t";
-    }
-    table += "\n";
+class Rules {
+  constructor(moves) {
+    this.moves = moves;
   }
-  return table;
+  compareMoves(move1, move2) {
+    const index1 = this.moves.indexOf(move1);
+    const index2 = this.moves.indexOf(move2);
+    if (index1 === index2) return "Draw";
+    const distance = (index2 - index1 + this.moves.length) % this.moves.length;
+    return distance <= this.moves.length / 2 ? "Win" : "Lose";
+  }
+}
+
+class KeyGenerator {
+  generateKey() {
+    return crypto.randomBytes(32).toString("hex");
+  }
+  generateHMAC(key, message) {
+    return crypto.createHmac("sha256", key).update(message).digest("hex");
+  }
+}
+
+class TableGenerator {
+  constructor(moves) {
+    this.rules = new Rules(moves);
+  }
+  generateTable() {
+    const moves = ["Rock", "Paper", "Scissors"];
+    const results = [
+      ["Draw", "Win", "Lose"],
+      ["Lose", "Draw", "Win"],
+      ["Win", "Lose", "Draw"],
+    ];
+
+    let table = "+-------------+------+-------+----------+\n";
+    table += "| v PC\\User > | Rock | Paper | Scissors |\n";
+    table += "+-------------+------+-------+----------+\n";
+
+    for (let i = 0; i < moves.length; i++) {
+      table += "| " + moves[i] + " ".repeat(11 - moves[i].length);
+      for (let j = 0; j < results[i].length; j++) {
+        table += "| " + results[i][j] + " ".repeat(6 - results[i][j].length);
+      }
+      table += "|\n+-------------+------+-------+----------+\n";
+    }
+
+    return table;
+  }
 }
 
 const moves = process.argv.slice(2);
-if (new Set(moves).size !== moves.length || moves.length % 2 === 0) {
-  console.log("Moves must be unique and there must be an odd number of them.");
-  console.log("Example: node script.js Rock Paper Scissors");
+if (moves.length < 2) {
+  console.log("Number of moves should be greater than 1.");
+  if (new Set(moves).size !== moves.length || moves.length % 2 === 0) {
+    console.log(
+      "Moves must be unique and there must be an odd number of them."
+    );
+    console.log("Example: node script.js Rock Paper Scissors");
+    return;
+  }
   process.exit(1);
 }
-console.log(moves);
+
+const rules = new Rules(moves);
+const keyGen = new KeyGenerator();
+const tableGen = new TableGenerator(moves);
 
 const computerMove = moves[Math.floor(Math.random() * moves.length)];
-const key = generateKey();
-const hmac = generateHMAC(key, computerMove);
+const key = keyGen.generateKey();
+const hmac = keyGen.generateHMAC(key, computerMove);
 
 console.log("HMAC:", hmac);
 console.log("Available moves:");
@@ -64,12 +87,12 @@ readline.question("Enter your move: ", (answer) => {
     console.log("Goodbye!");
     process.exit(0);
   } else if (answer === "?") {
-    console.log(generateTable(moves));
+    console.log(tableGen.generateTable());
   } else {
     const userMove = moves[parseInt(answer) - 1];
     console.log("Your move:", userMove);
     console.log("Computer move:", computerMove);
-    console.log("You", compareMoves(moves, userMove, computerMove) + "!");
+    console.log("You", rules.compareMoves(userMove, computerMove) + "!");
     console.log("HMAC key:", key);
   }
   readline.close();
